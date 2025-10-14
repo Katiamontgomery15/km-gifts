@@ -55,7 +55,7 @@ body {
 <script>
 const CONFIG = {
   title: "KM Xmas/Bday",
-  syncEndpoint: "https://script.google.com/macros/s/AKfycbwgen3cWI0Dx8FVrz4hP0ZmodloyYxeF3gnZaSgxyKANeRfuyYJDCRlXO9NyI2TzbO-qg/exec",
+  syncEndpoint: "https://script.google.com/macros/s/AKfycbwTe9RcLqv3DifgRAvEpRhtZm6ZWX-05Sw11fNBFiuw8-S33eQ9lCnZoJbr-00ZfJhLPA/exec",
   allowUndo: true,
   currency: "USD",
   pollMs: 15000
@@ -69,7 +69,7 @@ const INITIAL_ITEMS = [
   {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-iphone-17-pro-max", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
   {id:"camera-bag", cost:59.65, name:"Camera Bag", size:"", color:"Black", link:"https://www.pgytech.com/products/onego-rope-strap-bag", linkLabel:"OneGo Rope Strap Bag | PGYTECH", purchased:false},
   {id:"charger-3in1", cost:78.99, name:"Charger - Phone, watch, airpods", size:"", color:"Black", link:"https://kuxiu.store/products/x40-turbo-qi2-3-in-1-magsafe-foldable-wireless-charger", linkLabel:"KUXIU X40 Turbo Qi2.2 Certified 25W 3-in-1 MagSafe Foldable Wireless C", purchased:false},
-  {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/men-shoes/reember-camp-slip-on/1173974.html?dwvar_1173974_color=BLK", linkLabel:"ReEmber Camp Slip On", purchased:false},
+  {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/women-slippers/re-ember/", linkLabel:"ReEmber Camp Slip On", purchased:false},
   {id:"nike-shoes", cost:90.00, name:"Nike Shoes", size:"6.5 M/8 W", color:"Black/White", link:"https://www.skatewarehouse.com/Nike_SB_Blazer_Low_Pro_GT_Shoes/descpage-NKBLPGT.html?from=bshop&msclkid=996e0faeaa7c1516094a67403a257e65&utm_source=bing&utm_medium=cpc&utm_campaign=Shopping%3A%20Catch%20All%3A%20bshop&utm_term=4583657860375614&utm_content=Catch%20All", linkLabel:"Nike SB Blazer Low Pro GT – Skate Warehouse", purchased:false},
   {id:"levis-wedgie", cost:98.00, name:"Wedgie Straight Ankle Women's Jeans", size:"28W/30L", color:"Black Sprout", link:"https://www.levi.com/US/en_US/apparel/clothing/bottoms/wedgie-straight-womens-jeans/p/228610378", linkLabel:"Wedgie Straight Ankle Women's Jeans - Black | Levi's® US", purchased:false},
   {id:"mtb-jersey-m", cost:100.00, name:"MTB Jersey", size:"M", color:"White", link:"https://dfyrs.com/products/reaper-long-sleeve-flowteq-jersey-silver", linkLabel:"Reaper | Long Sleeve | Flowteq™ Jersey | Silver – DFYRS", purchased:false},
@@ -81,8 +81,24 @@ const KEY = "km-gifts-v2";
 function loadLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null } catch{ return null } }
 function saveLocal(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)) } catch{} }
 
-async function loadRemote(){ try{ const r = await fetch(CONFIG.syncEndpoint, { method:'GET', cache:'no-store' }); if(!r.ok) throw 0; return await r.json(); }catch{ return null } }
-async function saveRemote(data){ try{ const r = await fetch(CONFIG.syncEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}); return r.ok; }catch{ return false } }
+async function loadRemote(){
+  try{
+    const r = await fetch(CONFIG.syncEndpoint, { method:'GET', cache:'no-store' });
+    if(!r.ok) throw 0;
+    return await r.json();
+  }catch{ return null }
+}
+async function saveRemote(data){
+  try{
+    // Use text/plain to avoid CORS preflight; Apps Script reads raw body
+    const r = await fetch(CONFIG.syncEndpoint, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(data)
+    });
+    return r.ok;
+  }catch{ return false }
+}
 
 let state = { items: structuredClone(INITIAL_ITEMS) };
 let lastPushTs = 0;

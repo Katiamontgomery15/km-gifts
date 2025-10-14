@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Tailwind CDN is fine for this simple static page -->
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root { color-scheme: light dark }
@@ -56,12 +55,12 @@
 <script>
 // ---------- Config ----------
 const CONFIG = {
-  title: "KM Xmas/Bday",
-  // Your live Apps Script endpoint (JSONP supported)
+  title: "Katia Xmas/Bday",
+  // JSONP-enabled Apps Script endpoint you provided:
   syncEndpoint: "https://script.google.com/macros/s/AKfycbykiB4nADSdzeBkxJBn3rah3EItn7WYgxegsK0IFmzZabVbk-FiinpFizZcY5590SjXjA/exec",
   allowUndo: true,
   currency: "USD",
-  pollMs: 15000 // auto-refresh every 15s
+  pollMs: 15000
 };
 
 // ---------- Starter Data ----------
@@ -70,7 +69,7 @@ const INITIAL_ITEMS = [
   {id:"mtb-jersey-xl", cost:24.00, name:"MTB Jersey", size:"XL", color:"Orange Pink", link:"https://www.troyleedesigns.com/products/fa24-youth-gp-pro-air-jersey-carlsbad-97-orange-pink?variant=41809711890492", linkLabel:"Youth GP Pro Air Jersey Carlsbad 97 Orange / Pink – Troy Lee Designs", purchased:false},
   {id:"moto-jersey-l", cost:44.95, name:"Moto Jersey", size:"L", color:"Grape", link:"https://www.revzilla.com/dirt-bike/fox-racing-180-collect-womens-jersey?sku_id=10478342", linkLabel:"Fox Racing 180 Collect Women's Jersey - RevZilla", purchased:false},
   {id:"face-cleanser", cost:46.00, name:"Face Cleanser", size:"400ml", color:"Refill Pack", link:"https://drsambunting.com/en-us/products/flawless-cleanser-refill", linkLabel:"Flawless Cleanser Refill | Dr Sam's", purchased:false},
-  {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-glass-iphone-17-pro-max?variant=44960608518323&_gl=1*8jpayv*_up*MQ..*_ga*MzkzNjQzOTgyLjE3NjA0NjQzMjI.*_ga_S98KND9GHH*czE3NjA0NjQzMjIkbzEkZzAkdDE3NjA0NjQzMjYkajU2JGwwJGgxMzA1OTUwOTM3", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
+  {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-glass-iphone-17-pro-max?variant=44960608518323", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
   {id:"camera-bag", cost:59.65, name:"Camera Bag", size:"", color:"Black", link:"https://www.pgytech.com/products/onego-rope-strap-bag?variant=47120203153658", linkLabel:"OneGo Rope Strap Bag | PGYTECH", purchased:false},
   {id:"charger-3in1", cost:78.99, name:"Charger - Phone, watch, airpods", size:"", color:"Black", link:"https://kuxiu.co/products/kuxiu-x40-turbo-stand-black", linkLabel:"KUXIU X40 Turbo Qi2.2 Certified 25W 3-in-1 MagSafe Foldable Wireless C", purchased:false},
   {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/men-shoes/reember-camp-slip-on/1173974.html", linkLabel:"ReEmber Camp Slip On", purchased:false},
@@ -82,7 +81,7 @@ const INITIAL_ITEMS = [
 ];
 
 // ---------- Local Storage ----------
-const KEY = "km-gifts-v2"; // bumping key avoids stale data
+const KEY = "km-gifts-v2";
 function loadLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null } catch{ return null } }
 function saveLocal(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)) } catch{} }
 
@@ -99,7 +98,7 @@ function jsonp(url){
   });
 }
 async function loadRemote(){ try{ return await jsonp(CONFIG.syncEndpoint); } catch{ return null } }
-// Write using text/plain to avoid preflight; we don't need response body
+// Write using text/plain to avoid preflight
 async function saveRemote(data){
   try{
     const r = await fetch(CONFIG.syncEndpoint, {
@@ -116,8 +115,6 @@ let state = { items: structuredClone(INITIAL_ITEMS) };
 let lastPushTs = 0;
 let pollTimer = null;
 let $items,$search,$sort,$syncStatus;
-
-function formatMoney(n){ return new Intl.NumberFormat(undefined,{style:'currency',currency:CONFIG.currency}).format(n) }
 
 function getFilteredSorted(arr){
   let out=[...arr];
@@ -196,7 +193,7 @@ function toast(msg){
 // Polling for remote changes
 async function pollRemote(){
   if(document.hidden) return;
-  if(Date.now()-lastPushTs < 5000) return; // avoid echo right after our push
+  if(Date.now()-lastPushTs < 5000) return;
   const remote = await loadRemote();
   if(remote?.items && Array.isArray(remote.items)){
     const localJson = JSON.stringify(state.items);
@@ -229,14 +226,14 @@ async function setup(){
   const local  = loadLocal();
 
   if (remote && Array.isArray(remote.items) && remote.items.length){
-    state = remote;            // prefer remote if it has items
+    state = remote;
     showSync('Live sync enabled');
   } else if (local && Array.isArray(local.items) && local.items.length){
-    state = local;             // fall back to local
-    const ok = await saveRemote(state); // push up so others see it
+    state = local;
+    const ok = await saveRemote(state);
     showSync(ok ? 'Uploaded your list for everyone' : 'Sync offline – saved on this device', ok);
   } else {
-    state = { items: structuredClone(INITIAL_ITEMS) }; // last resort
+    state = { items: structuredClone(INITIAL_ITEMS) };
     const ok = await saveRemote(state);
     showSync(ok ? 'Live sync enabled' : 'Sync offline – saved on this device', ok);
   }
@@ -249,3 +246,4 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 </script>
 </body>
 </html>
+

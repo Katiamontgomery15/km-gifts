@@ -1,62 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KM Xmas/Bday – Gift List</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CDN (fine for this small static page) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root { color-scheme: light dark }
-    html { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial }
-    body{
-      background-image:url('https://static.vecteezy.com/system/resources/previews/029/642/930/large_2x/christmas-background-christmas-landscape-background-christmas-wallpaper-landscape-background-ai-generative-free-photo.jpg');
-      background-size:cover; background-position:center; background-repeat:no-repeat;
-      min-height:100vh; background-attachment:fixed;
-    }
-    .bg-overlay{ background:rgba(255,255,255,.86); backdrop-filter:blur(4px) }
-    .truncate-2{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KM Xmas/Bday – Gift List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {color-scheme: light dark}
+html {font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"}
+body {
+background-image: url('https://static.vecteezy.com/system/resources/previews/029/642/930/large_2x/christmas-background-christmas-landscape-background-christmas-wallpaper-landscape-background-ai-generative-free-photo.jpg');
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+min-height: 100vh;
+background-attachment: fixed;
+}
+.bg-overlay {
+background-color: rgba(255,255,255,0.45); /* More transparent */
+backdrop-filter: blur(6px);
+}
+.truncate-2 {display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden}
+</style>
 </head>
 <body class="text-slate-900 dark:text-slate-100">
-  <div class="bg-overlay max-w-5xl mx-auto p-4 md:p-8 rounded-2xl mt-6 shadow-lg">
-    <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-bold">KM Xmas/Bday</h1>
-        <p id="summary" class="text-sm text-slate-600 dark:text-slate-300 mt-1">Loading…</p>
-        <p class="text-xs mt-1">Amazon list:
-          <a class="underline text-blue-600" href="https://www.amazon.com/hz/wishlist/ls/3DKWBJ9RAO80N?ref_=wl_share" target="_blank" rel="noopener">open wishlist</a>
-        </p>
-      </div>
-      <div class="flex gap-2 w-full md:w-auto">
-        <input id="search" placeholder="Search items…" class="flex-1 md:w-72 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <select id="sort" class="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="default">Sort: Original</option>
-          <option value="price-asc">Price: Low → High</option>
-          <option value="price-desc">Price: High → Low</option>
-          <option value="name">Name A→Z</option>
-          <option value="status">Status</option>
-        </select>
-      </div>
-    </header>
+<div class="bg-overlay max-w-5xl mx-auto p-4 md:p-8 rounded-2xl mt-6 shadow-lg">
+<header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+<div>
+<h1 class="text-2xl md:text-3xl font-bold">KM Xmas/Bday</h1>
+<p id="summary" class="text-sm text-slate-600 dark:text-slate-300 mt-1">Loading…</p>
+<p class="text-xs mt-1">Amazon list: <a id="amazonLink" class="underline text-blue-600" href="https://www.amazon.com/hz/wishlist/ls/3DKWBJ9RAO80N?ref_=wl_share" target="_blank" rel="noopener">open wishlist</a></p>
+</div>
+<div class="flex gap-2 w-full md:w-auto">
+<input id="search" placeholder="Search items…" class="flex-1 md:w-72 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+<select id="sort" class="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+<option value="default">Sort: Original</option>
+<option value="price-asc">Price: Low → High</option>
+<option value="price-desc">Price: High → Low</option>
+<option value="name">Name A→Z</option>
+<option value="status">Status</option>
+</select>
+</div>
+</header>
 
-    <div class="mb-6">
-      <div class="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-        <div id="progressBar" class="h-3 bg-indigo-500" style="width:0%"></div>
-      </div>
-      <div id="totals" class="text-xs text-slate-600 dark:text-slate-300 mt-2">&nbsp;</div>
-    </div>
 
-    <section id="items" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+<div class="mb-6">
+<div class="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+<div id="progressBar" class="h-3 bg-indigo-500" style="width:0%"></div>
+</div>
+<div id="totals" class="text-xs text-slate-600 dark:text-slate-300 mt-2">&nbsp;</div>
+</div>
 
-    <footer class="mt-10 text-xs text-slate-700 dark:text-slate-400">
-      <p>Tip: Tap “Mark purchased” after you buy an item so others don’t duplicate it. No login needed.</p>
-      <p class="mt-1">If you accidentally mark something, tap “Undo”.</p>
-    </footer>
-  </div>
+
+<section id="items" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+
+
+<footer class="mt-10 text-xs text-slate-700 dark:text-slate-400">
+<p>Tip: Tap “Mark purchased” after you buy an item so others don’t duplicate it. No login needed.</p>
+<p class="mt-1">If you accidentally mark something, tap “Undo”.</p>
+</footer>
+</div>
 
   <script>
   // ---------- Config ----------

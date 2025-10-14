@@ -20,7 +20,7 @@ min-height: 100vh;
 background-attachment: fixed;
 }
 .bg-overlay {
-background-color: rgba(255,255,255,0.45); /* More transparent */
+background-color: rgba(255,255,255,0.45);
 backdrop-filter: blur(6px);
 }
 .truncate-2 {display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden}
@@ -46,7 +46,6 @@ backdrop-filter: blur(6px);
 </div>
 </header>
 
-
 <div class="mb-6">
 <div class="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
 <div id="progressBar" class="h-3 bg-indigo-500" style="width:0%"></div>
@@ -54,9 +53,7 @@ backdrop-filter: blur(6px);
 <div id="totals" class="text-xs text-slate-600 dark:text-slate-300 mt-2">&nbsp;</div>
 </div>
 
-
 <section id="items" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
-
 
 <footer class="mt-10 text-xs text-slate-700 dark:text-slate-400">
 <p>Tip: Tap “Mark purchased” after you buy an item so others don’t duplicate it. No login needed.</p>
@@ -64,137 +61,120 @@ backdrop-filter: blur(6px);
 </footer>
 </div>
 
-  <script>
-  // ---------- Config ----------
-  const CONFIG = { title: "KM Xmas/Bday", syncEndpoint: null, allowUndo: true, currency: "USD" };
+<script>
+const CONFIG = { title: "KM Xmas/Bday", syncEndpoint: null, allowUndo: true, currency: "USD" };
+const INITIAL_ITEMS = [
+  {id:"tee", cost:19.50, name:"Basic white tee", size:"S", color:"White", link:"https://www.madewell.com/product/whisper-crew-neck-tee", linkLabel:"Whisper Crew Neck Tee | Madewell", purchased:false},
+  {id:"mtb-jersey-xl", cost:24.00, name:"MTB Jersey", size:"XL", color:"Orange Pink", link:"https://www.troyleedesigns.com/products/youth-gp-pro-air-jersey-carlsbad-97-orange-pink", linkLabel:"Youth GP Pro Air Jersey Carlsbad 97 Orange / Pink – Troy Lee Designs", purchased:false},
+  {id:"moto-jersey-l", cost:44.95, name:"Moto Jersey", size:"L", color:"Grape", link:"https://www.revzilla.com/motorcycle/fox-racing-180-collect-womens-jersey", linkLabel:"Fox Racing 180 Collect Women's Jersey - RevZilla", purchased:false},
+  {id:"face-cleanser", cost:46.00, name:"Face Cleanser", size:"400ml", color:"Refill Pack", link:"https://drsambunting.com/products/flawless-cleanser-refill", linkLabel:"Flawless Cleanser Refill | Dr Sam's", purchased:false},
+  {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-iphone-17-pro-max", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
+  {id:"camera-bag", cost:59.65, name:"Camera Bag", size:"", color:"Black", link:"https://www.pgytech.com/products/onego-rope-strap-bag", linkLabel:"OneGo Rope Strap Bag | PGYTECH", purchased:false},
+  {id:"charger-3in1", cost:78.99, name:"Charger - Phone, watch, airpods", size:"", color:"Black", link:"https://kuxiu.store/products/x40-turbo-qi2-3-in-1-magsafe-foldable-wireless-charger", linkLabel:"KUXIU X40 Turbo Qi2.2 Certified 25W 3-in-1 MagSafe Foldable Wireless C", purchased:false},
+  {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/women-slippers/re-ember/", linkLabel:"ReEmber Camp Slip On", purchased:false},
+  {id:"nike-shoes", cost:90.00, name:"Nike Shoes", size:"6.5 M/8 W", color:"Black/White", link:"https://www.skatewarehouse.com/Nike_SB_Blazer_Low_Pro_GT_Shoes/descpage-NKBLPGT.html?from=bshop&msclkid=996e0faeaa7c1516094a67403a257e65&utm_source=bing&utm_medium=cpc&utm_campaign=Shopping%3A%20Catch%20All%3A%20bshop&utm_term=4583657860375614&utm_content=Catch%20All", linkLabel:"Nike SB Blazer Low Pro GT – Skate Warehouse", purchased:false},
+  {id:"levis-wedgie", cost:98.00, name:"Wedgie Straight Ankle Women's Jeans", size:"28W/30L", color:"Black Sprout", link:"https://www.levi.com/US/en_US/apparel/clothing/bottoms/wedgie-straight-womens-jeans/p/228610378", linkLabel:"Wedgie Straight Ankle Women's Jeans - Black | Levi's® US", purchased:false},
+  {id:"mtb-jersey-m", cost:100.00, name:"MTB Jersey", size:"M", color:"White", link:"https://dfyrs.com/products/reaper-long-sleeve-flowteq-jersey-silver", linkLabel:"Reaper | Long Sleeve | Flowteq™ Jersey | Silver – DFYRS", purchased:false},
+  {id:"mtb-pant", cost:139.00, name:"MTB Pant", size:"M", color:"Twisted Checkers Purple", link:"https://www.evo.com/outlet/pants/troy-lee-designs-lilium-womens", linkLabel:"Troy Lee Designs Lilium Pants - Women's | evo", purchased:false},
+  {id:"moto-pant", cost:140.00, name:"Moto Pant", size:"10", color:"Grape", link:"https://www.revzilla.com/motorcycle/fox-racing-180-collect-womens-pants", linkLabel:"Fox Racing 180 Collect Women's Pants - RevZilla", purchased:false}
+];
 
-  // ---------- Data ----------
-  const INITIAL_ITEMS = [
-    {id:"tee", cost:19.50, name:"Basic white tee", size:"S", color:"White", link:"https://www.madewell.com/product/whisper-crew-neck-tee", linkLabel:"Whisper Crew Neck Tee | Madewell", purchased:false},
-    {id:"mtb-jersey-xl", cost:24.00, name:"MTB Jersey", size:"XL", color:"Orange Pink", link:"https://www.troyleedesigns.com/products/youth-gp-pro-air-jersey-carlsbad-97-orange-pink", linkLabel:"Youth GP Pro Air Jersey Carlsbad 97 Orange / Pink – Troy Lee Designs", purchased:false},
-    {id:"moto-jersey-l", cost:44.95, name:"Moto Jersey", size:"L", color:"Grape", link:"https://www.revzilla.com/motorcycle/fox-racing-180-collect-womens-jersey", linkLabel:"Fox Racing 180 Collect Women's Jersey - RevZilla", purchased:false},
-    {id:"face-cleanser", cost:46.00, name:"Face Cleanser", size:"400ml", color:"Refill Pack", link:"https://drsambunting.com/products/flawless-cleanser-refill", linkLabel:"Flawless Cleanser Refill | Dr Sam's", purchased:false},
-    {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-iphone-17-pro-max", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
-    {id:"camera-bag", cost:59.65, name:"Camera Bag", size:"", color:"Black", link:"https://www.pgytech.com/products/onego-rope-strap-bag", linkLabel:"OneGo Rope Strap Bag | PGYTECH", purchased:false},
-    {id:"charger-3in1", cost:78.99, name:"Charger - Phone, watch, airpods", size:"", color:"Black", link:"https://kuxiu.store/products/x40-turbo-qi2-3-in-1-magsafe-foldable-wireless-charger", linkLabel:"KUXIU X40 Turbo Qi2.2 Certified 25W 3-in-1 MagSafe Foldable Wireless C", purchased:false},
-    {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/women-slippers/re-ember/", linkLabel:"ReEmber Camp Slip On", purchased:false},
-    {id:"nike-shoes", cost:90.00, name:"Nike Shoes", size:"6.5 M/8 W", color:"Black/White", link:"https://www.skatewarehouse.com/Nike_SB_Blazer_Low_Pro_GT_Shoes/descpage-NKBLPGT.html?from=bshop&msclkid=996e0faeaa7c1516094a67403a257e65&utm_source=bing&utm_medium=cpc&utm_campaign=Shopping%3A%20Catch%20All%3A%20bshop&utm_term=4583657860375614&utm_content=Catch%20All
-", linkLabel: "Nike SB Zoom Blazer Low Pro GT Skate Shoes. Nike.com", purchased:false},
-    {id:"levis-wedgie", cost:98.00, name:"Wedgie Straight Ankle Women's Jeans", size:"28W/30L", color:"Black Sprout", link:"https://www.levi.com/US/en_US/apparel/clothing/bottoms/wedgie-straight-womens-jeans/p/228610378", linkLabel:"Wedgie Straight Ankle Women's Jeans - Black | Levi's® US", purchased:false},
-    {id:"mtb-jersey-m", cost:100.00, name:"MTB Jersey", size:"M", color:"White", link:"https://dfyrs.com/products/reaper-long-sleeve-flowteq-jersey-silver", linkLabel:"Reaper | Long Sleeve | Flowteq™ Jersey | Silver – DFYRS", purchased:false},
-    {id:"mtb-pant", cost:139.00, name:"MTB Pant", size:"M", color:"Twisted Checkers Purple", link:"https://www.evo.com/outlet/pants/troy-lee-designs-lilium-womens", linkLabel:"Troy Lee Designs Lilium Pants - Women's | evo", purchased:false},
-    {id:"moto-pant", cost:140.00, name:"Moto Pant", size:"10", color:"Grape", link:"https://www.revzilla.com/motorcycle/fox-racing-180-collect-womens-pants", linkLabel:"Fox Racing 180 Collect Women's Pants - RevZilla", purchased:false}
-  ];
+const KEY = "km-gifts-v2";
+function loadLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null } catch{ return null } }
+function saveLocal(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)) } catch{} }
+let state = { items: structuredClone(INITIAL_ITEMS) };
 
-  // ---------- State ----------
-  const KEY = "km-gifts-v1";
-  function loadLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null } catch{ return null } }
-  function saveLocal(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)) } catch{} }
-  let state = { items: structuredClone(INITIAL_ITEMS) };
+let $items, $summary, $progress, $totals, $search, $sort;
 
-  // ---------- DOM refs (DECLARED first; assigned in setup) ----------
-  let $items, $summary, $progress, $totals, $search, $sort;
+function formatMoney(n){ return new Intl.NumberFormat(undefined,{style:'currency',currency:CONFIG.currency}).format(n) }
 
-  // ---------- Helpers ----------
-  function formatMoney(n){ return new Intl.NumberFormat(undefined,{style:'currency',currency:CONFIG.currency}).format(n) }
+function getFilteredSorted(arr){
+  let out = [...arr];
+  const q = (($search && $search.value) || '').trim().toLowerCase();
+  if (q) out = out.filter(it => [it.name,it.size,it.color].some(s => String(s).toLowerCase().includes(q)));
+  const sortVal = (($sort && $sort.value) || 'default');
+  switch (sortVal){
+    case 'price-asc': out.sort((a,b)=>a.cost-b.cost); break;
+    case 'price-desc': out.sort((a,b)=>b.cost-a.cost); break;
+    case 'name': out.sort((a,b)=>a.name.localeCompare(b.name)); break;
+    case 'status': out.sort((a,b)=>Number(a.purchased)-Number(b.purchased)); break;
+    default: out.sort((a,b)=>INITIAL_ITEMS.findIndex(x=>x.id===a.id)-INITIAL_ITEMS.findIndex(x=>x.id===b.id));
+  }
+  return out;
+}
 
-  function getFilteredSorted(arr){
-    let out = [...arr];
-    const q = (($search && $search.value) || '').trim().toLowerCase();
-    if (q) out = out.filter(it => [it.name,it.size,it.color].some(s => String(s).toLowerCase().includes(q)));
-    const sortVal = (($sort && $sort.value) || 'default');
-    switch (sortVal){
-      case 'price-asc': out.sort((a,b)=>a.cost-b.cost); break;
-      case 'price-desc': out.sort((a,b)=>b.cost-a.cost); break;
-      case 'name': out.sort((a,b)=>a.name.localeCompare(b.name)); break;
-      case 'status': out.sort((a,b)=>Number(a.purchased)-Number(b.purchased)); break;
-      default: out.sort((a,b)=>INITIAL_ITEMS.findIndex(x=>x.id===a.id)-INITIAL_ITEMS.findIndex(x=>x.id===b.id));
+function cardHTML(it){
+  return `<article class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4 flex flex-col gap-3 shadow-sm">
+    <div class="flex items-start justify-between gap-3">
+      <h3 class="font-semibold text-base truncate-2">${it.name}</h3>
+      <span class="text-sm shrink-0 px-2 py-1 rounded-full ${it.purchased ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}">${it.purchased ? 'Purchased' : 'Wanted'}</span>
+    </div>
+    <div class="text-sm grid grid-cols-2 gap-2">
+      <div><span class="text-slate-500">Price:</span> ${formatMoney(it.cost)}</div>
+      <div><span class="text-slate-500">Size:</span> ${it.size || '—'}</div>
+      <div><span class="text-slate-500">Color:</span> ${it.color || '—'}</div>
+      <div class="col-span-2 flex gap-2 items-center">
+        <a href="${it.link}" target="_blank" rel="noopener" class="underline text-indigo-600 hover:text-indigo-700 truncate">${it.linkLabel || 'Product link'}</a>
+        <button id="copy-${it.id}" class="text-xs px-2 py-1 border rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Copy link</button>
+      </div>
+    </div>
+    <div class="mt-1 flex gap-2">
+      ${it.purchased ? '' : `<button id="mark-${it.id}" class="flex-1 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700">Mark purchased</button>`}
+      ${CONFIG.allowUndo && it.purchased ? `<button id="undo-${it.id}" class="flex-1 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Undo</button>` : ''}
+    </div>
+  </article>`;
+}
+
+function render(){
+  const items = getFilteredSorted(state.items);
+  const purchased = state.items.filter(i=>i.purchased).length;
+  const total = state.items.length;
+  const spent = state.items.filter(i=>i.purchased).reduce((s,i)=>s+i.cost,0);
+  const all = state.items.reduce((s,i)=>s+i.cost,0);
+
+  $summary.textContent = `${purchased}/${total} purchased`;
+  $progress.style.width = Math.round((purchased/Math.max(1,total))*100) + '%';
+  $totals.textContent = `${formatMoney(spent)} of ${formatMoney(all)} purchased`;
+
+  $items.innerHTML = items.map(cardHTML).join('');
+  for (const it of items){
+    document.querySelector(`#mark-${it.id}`)?.addEventListener('click',()=>toggle(it.id,true));
+    document.querySelector(`#undo-${it.id}`)?.addEventListener('click',()=>toggle(it.id,false));
+    document.querySelector(`#copy-${it.id}`)?.addEventListener('click',()=>copy(it.link));
+  }
+}
+
+function toggle(id,purchased){
+  const idx = state.items.findIndex(i=>i.id===id); if (idx<0) return;
+  state.items[idx].purchased = purchased;
+  saveLocal(state);
+  render();
+}
+
+async function copy(text){ try{ await navigator.clipboard.writeText(text); toast('Link copied'); } catch { toast('Copy failed'); } }
+function toast(msg){ const el=document.createElement('div'); el.textContent=msg; el.className='fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg'; document.body.appendChild(el); setTimeout(()=>el.remove(),1400); }
+
+function setup(){
+  $items=document.querySelector('#items');
+  $summary=document.querySelector('#summary');
+  $progress=document.querySelector('#progressBar');
+  $totals=document.querySelector('#totals');
+  $search=document.querySelector('#search');
+  $sort=document.querySelector('#sort');
+  $search.addEventListener('input',render);
+  $sort.addEventListener('change',render);
+  const local=loadLocal();
+  if(local?.items){
+    const idx=local.items.findIndex(i=>i.id==='nike-shoes');
+    if(idx>-1){
+      local.items[idx].link='https://www.skatewarehouse.com/Nike_SB_Blazer_Low_Pro_GT_Shoes/descpage-NKBLPGT.html?from=bshop&msclkid=996e0faeaa7c1516094a67403a257e65&utm_source=bing&utm_medium=cpc&utm_campaign=Shopping%3A%20Catch%20All%3A%20bshop&utm_term=4583657860375614&utm_content=Catch%20All';
     }
-    return out;
+    state=local;
   }
+  render();
+}
 
-  function cardHTML(it){
-    return `
-      <article class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-4 flex flex-col gap-3 shadow-sm">
-        <div class="flex items-start justify-between gap-3">
-          <h3 class="font-semibold text-base truncate-2">${it.name}</h3>
-          <span class="text-sm shrink-0 px-2 py-1 rounded-full ${it.purchased ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}">
-            ${it.purchased ? 'Purchased' : 'Wanted'}
-          </span>
-        </div>
-        <div class="text-sm grid grid-cols-2 gap-2">
-          <div><span class="text-slate-500">Price:</span> ${formatMoney(it.cost)}</div>
-          <div><span class="text-slate-500">Size:</span> ${it.size || '—'}</div>
-          <div><span class="text-slate-500">Color:</span> ${it.color || '—'}</div>
-          <div class="col-span-2 flex gap-2 items-center">
-            <a href="${it.link}" target="_blank" rel="noopener" class="underline text-indigo-600 hover:text-indigo-700 truncate">${it.linkLabel || 'Product link'}</a>
-            <button id="copy-${it.id}" class="text-xs px-2 py-1 border rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Copy link</button>
-          </div>
-        </div>
-        <div class="mt-1 flex gap-2">
-          ${it.purchased ? '' : `<button id="mark-${it.id}" class="flex-1 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700">Mark purchased</button>`}
-          ${CONFIG.allowUndo && it.purchased ? `<button id="undo-${it.id}" class="flex-1 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Undo</button>` : ''}
-        </div>
-      </article>`;
-  }
-
-  function render(){
-    const items = getFilteredSorted(state.items);
-    const purchased = state.items.filter(i=>i.purchased).length;
-    const total = state.items.length;
-    const spent = state.items.filter(i=>i.purchased).reduce((s,i)=>s+i.cost,0);
-    const all = state.items.reduce((s,i)=>s+i.cost,0);
-
-    $summary.textContent = `${purchased}/${total} purchased`;
-    $progress.style.width = Math.round((purchased/Math.max(1,total))*100) + '%';
-    $totals.textContent = `${formatMoney(spent)} of ${formatMoney(all)} purchased`;
-
-    $items.innerHTML = items.map(cardHTML).join('');
-    for (const it of items){
-      document.querySelector(`#mark-${it.id}`)?.addEventListener('click',()=>toggle(it.id,true));
-      document.querySelector(`#undo-${it.id}`)?.addEventListener('click',()=>toggle(it.id,false));
-      document.querySelector(`#copy-${it.id}`)?.addEventListener('click',()=>copy(it.link));
-    }
-  }
-
-  function toggle(id,purchased){
-    const idx = state.items.findIndex(i=>i.id===id); if (idx<0) return;
-    state.items[idx].purchased = purchased;
-    saveLocal(state);
-    render();
-  }
-
-  async function copy(text){ try{ await navigator.clipboard.writeText(text); toast('Link copied'); } catch { toast('Copy failed'); } }
-  function toast(msg){ const el=document.createElement('div'); el.textContent=msg; el.className='fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg'; document.body.appendChild(el); setTimeout(()=>el.remove(),1400); }
-
-  // ---------- Setup ----------
-  function setup(){
-    // DOM refs
-    $items = document.querySelector('#items');
-    $summary = document.querySelector('#summary');
-    $progress = document.querySelector('#progressBar');
-    $totals = document.querySelector('#totals');
-    $search = document.querySelector('#search');
-    $sort = document.querySelector('#sort');
-
-    // Handlers
-    $search.addEventListener('input', render);
-    $sort.addEventListener('change', render);
-
-    // Load local state if any
-    const local = loadLocal();
-    if (local?.items) state = local;
-
-    render();
-  }
-
-  // Run setup after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setup);
-  } else {
-    setup();
-  }
-  </script>
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setup); else setup();
+</script>
 </body>
 </html>
-

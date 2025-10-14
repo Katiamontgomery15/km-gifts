@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KM Xmas/Bday – Gift List</title>
+<title>Katia Xmas/Bday – Gift List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,8 +28,7 @@ body {
   <div class="bg-overlay max-w-5xl mx-auto p-4 md:p-8 rounded-2xl mt-6 shadow-lg">
     <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold">KM Xmas/Bday</h1>
-        <p id="summary" class="text-sm text-slate-600 dark:text-slate-300 mt-1">Loading…</p>
+        <h1 class="text-2xl md:text-3xl font-bold">Katia Xmas/Bday</h1>
         <p class="text-xs mt-1">Amazon list: <a class="underline text-blue-600" href="https://www.amazon.com/hz/wishlist/ls/3DKWBJ9RAO80N?ref_=wl_share" target="_blank" rel="noopener">open wishlist</a></p>
         <div id="syncStatus" class="mt-2 text-[11px] text-slate-500"></div>
       </div>
@@ -45,13 +44,6 @@ body {
       </div>
     </header>
 
-    <div class="mb-6">
-      <div class="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-        <div id="progressBar" class="h-3 bg-indigo-500" style="width:0%"></div>
-      </div>
-      <div id="totals" class="text-xs text-slate-600 dark:text-slate-300 mt-2">&nbsp;</div>
-    </div>
-
     <section id="items" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
 
     <footer class="mt-10 text-xs text-slate-700 dark:text-slate-400">
@@ -61,16 +53,14 @@ body {
   </div>
 
 <script>
-// ---------- Config ----------
 const CONFIG = {
   title: "KM Xmas/Bday",
-  // Paste your Apps Script Web App URL between the quotes below
   syncEndpoint: "https://script.google.com/macros/s/AKfycbwgen3cWI0Dx8FVrz4hP0ZmodloyYxeF3gnZaSgxyKANeRfuyYJDCRlXO9NyI2TzbO-qg/exec",
   allowUndo: true,
-  currency: "USD"
+  currency: "USD",
+  pollMs: 15000
 };
 
-// ---------- Data ----------
 const INITIAL_ITEMS = [
   {id:"tee", cost:19.50, name:"Basic white tee", size:"S", color:"White", link:"https://www.madewell.com/product/whisper-crew-neck-tee", linkLabel:"Whisper Crew Neck Tee | Madewell", purchased:false},
   {id:"mtb-jersey-xl", cost:24.00, name:"MTB Jersey", size:"XL", color:"Orange Pink", link:"https://www.troyleedesigns.com/products/youth-gp-pro-air-jersey-carlsbad-97-orange-pink", linkLabel:"Youth GP Pro Air Jersey Carlsbad 97 Orange / Pink – Troy Lee Designs", purchased:false},
@@ -79,7 +69,7 @@ const INITIAL_ITEMS = [
   {id:"screen-protector", cost:56.00, name:"Red light screen protector", size:"Iphone 17 pro max", color:"Red Light Converter + Privacy for iPhone 17 Pro Max", link:"https://www.bodyguardz.com/products/red-light-converter-privacy-iphone-17-pro-max", linkLabel:"Red Light Converter + Privacy for iPhone 17 Pro Max | BodyGuardz", purchased:false},
   {id:"camera-bag", cost:59.65, name:"Camera Bag", size:"", color:"Black", link:"https://www.pgytech.com/products/onego-rope-strap-bag", linkLabel:"OneGo Rope Strap Bag | PGYTECH", purchased:false},
   {id:"charger-3in1", cost:78.99, name:"Charger - Phone, watch, airpods", size:"", color:"Black", link:"https://kuxiu.store/products/x40-turbo-qi2-3-in-1-magsafe-foldable-wireless-charger", linkLabel:"KUXIU X40 Turbo Qi2.2 Certified 25W 3-in-1 MagSafe Foldable Wireless C", purchased:false},
-  {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/women-slippers/re-ember/", linkLabel:"ReEmber Camp Slip On", purchased:false},
+  {id:"camp-slipper", cost:80.00, name:"Camp Slipper", size:"6", color:"Black", link:"https://www.teva.com/men-shoes/reember-camp-slip-on/1173974.html?dwvar_1173974_color=BLK", linkLabel:"ReEmber Camp Slip On", purchased:false},
   {id:"nike-shoes", cost:90.00, name:"Nike Shoes", size:"6.5 M/8 W", color:"Black/White", link:"https://www.skatewarehouse.com/Nike_SB_Blazer_Low_Pro_GT_Shoes/descpage-NKBLPGT.html?from=bshop&msclkid=996e0faeaa7c1516094a67403a257e65&utm_source=bing&utm_medium=cpc&utm_campaign=Shopping%3A%20Catch%20All%3A%20bshop&utm_term=4583657860375614&utm_content=Catch%20All", linkLabel:"Nike SB Blazer Low Pro GT – Skate Warehouse", purchased:false},
   {id:"levis-wedgie", cost:98.00, name:"Wedgie Straight Ankle Women's Jeans", size:"28W/30L", color:"Black Sprout", link:"https://www.levi.com/US/en_US/apparel/clothing/bottoms/wedgie-straight-womens-jeans/p/228610378", linkLabel:"Wedgie Straight Ankle Women's Jeans - Black | Levi's® US", purchased:false},
   {id:"mtb-jersey-m", cost:100.00, name:"MTB Jersey", size:"M", color:"White", link:"https://dfyrs.com/products/reaper-long-sleeve-flowteq-jersey-silver", linkLabel:"Reaper | Long Sleeve | Flowteq™ Jersey | Silver – DFYRS", purchased:false},
@@ -87,34 +77,16 @@ const INITIAL_ITEMS = [
   {id:"moto-pant", cost:140.00, name:"Moto Pant", size:"10", color:"Grape", link:"https://www.revzilla.com/motorcycle/fox-racing-180-collect-womens-pants", linkLabel:"Fox Racing 180 Collect Women's Pants - RevZilla", purchased:false}
 ];
 
-// ---------- Storage ----------
-const KEY = "km-gifts-v2"; // bumping key avoids stale local data
+const KEY = "km-gifts-v2";
 function loadLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null } catch{ return null } }
 function saveLocal(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)) } catch{} }
 
-// Remote sync (Apps Script)
-async function loadRemote(){
-  if(!CONFIG.syncEndpoint || CONFIG.syncEndpoint.includes('YOUR_APPS_SCRIPT_URL_HERE')) return null;
-  try{
-    const r = await fetch(CONFIG.syncEndpoint, { method:'GET' });
-    if(!r.ok) throw 0; return await r.json();
-  }catch{ return null }
-}
-async function saveRemote(data){
-  if(!CONFIG.syncEndpoint || CONFIG.syncEndpoint.includes('YOUR_APPS_SCRIPT_URL_HERE')) return false;
-  try{
-    const r = await fetch(CONFIG.syncEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
-    return r.ok;
-  }catch{ return false }
-}
+async function loadRemote(){ try{ const r = await fetch(CONFIG.syncEndpoint, { method:'GET', cache:'no-store' }); if(!r.ok) throw 0; return await r.json(); }catch{ return null } }
+async function saveRemote(data){ try{ const r = await fetch(CONFIG.syncEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}); return r.ok; }catch{ return false } }
 
-// ---------- State ----------
 let state = { items: structuredClone(INITIAL_ITEMS) };
-
-// ---------- DOM ----------
-let $items,$summary,$progress,$totals,$search,$sort,$syncStatus;
-
-function formatMoney(n){ return new Intl.NumberFormat(undefined,{style:'currency',currency:CONFIG.currency}).format(n) }
+let lastPushTs = 0;
+let $items,$search,$sort,$syncStatus;
 
 function getFilteredSorted(arr){
   let out=[...arr];
@@ -138,7 +110,6 @@ function cardHTML(it){
       <span class="badge ${it.purchased ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}">${it.purchased ? 'Purchased' : 'Wanted'}</span>
     </div>
     <div class="text-sm grid grid-cols-2 gap-2">
-      <div><span class="text-slate-500">Price:</span> ${formatMoney(it.cost)}</div>
       <div><span class="text-slate-500">Size:</span> ${it.size || '—'}</div>
       <div><span class="text-slate-500">Color:</span> ${it.color || '—'}</div>
       <div class="col-span-2 flex gap-2 items-center">
@@ -155,15 +126,6 @@ function cardHTML(it){
 
 function render(){
   const items=getFilteredSorted(state.items);
-  const purchased=state.items.filter(i=>i.purchased).length;
-  const total=state.items.length;
-  const spent=state.items.filter(i=>i.purchased).reduce((s,i)=>s+i.cost,0);
-  const all=state.items.reduce((s,i)=>s+i.cost,0);
-
-  $summary.textContent=`${purchased}/${total} purchased`;
-  $progress.style.width=Math.round((purchased/Math.max(1,total))*100)+'%';
-  $totals.textContent=`${formatMoney(spent)} of ${formatMoney(all)} purchased`;
-
   $items.innerHTML=items.map(cardHTML).join('');
   for(const it of items){
     document.querySelector(`#mark-${it.id}`)?.addEventListener('click',()=>toggle(it.id,true));
@@ -172,29 +134,21 @@ function render(){
   }
 }
 
-function showSync(text, ok=true){
-  if(!$syncStatus) return;
-  $syncStatus.textContent=text;
-  $syncStatus.className = ok ? 'text-[11px] text-emerald-600' : 'text-[11px] text-amber-600';
-}
+function showSync(text, ok=true){ if(!$syncStatus) return; $syncStatus.textContent=text; $syncStatus.className = ok ? 'text-[11px] text-emerald-600' : 'text-[11px] text-amber-600'; }
 
-function toggle(id,purchased){
-  const idx=state.items.findIndex(i=>i.id===id); if(idx<0) return;
-  state.items[idx].purchased=purchased;
-  saveLocal(state);
-  render();
-  // Fire-and-forget remote save
-  saveRemote(state).then(ok=>{ if(ok) showSync('Changes saved for everyone'); });
-}
+function toggle(id,purchased){ const idx=state.items.findIndex(i=>i.id===id); if(idx<0) return; state.items[idx].purchased=purchased; saveLocal(state); render(); lastPushTs=Date.now(); saveRemote(state).then(ok=>{ if(ok) showSync('Changes saved for everyone'); }); }
 
 async function copy(text){ try{ await navigator.clipboard.writeText(text); toast('Link copied'); } catch { toast('Copy failed'); } }
 function toast(msg){ const el=document.createElement('div'); el.textContent=msg; el.className='fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg'; document.body.appendChild(el); setTimeout(()=>el.remove(),1400); }
 
+let pollTimer=null;
+async function pollRemote(){ if(document.hidden) return; if(Date.now()-lastPushTs < 5000) return; const remote = await loadRemote(); if(remote?.items){ const localJson = JSON.stringify(state.items); const remoteJson = JSON.stringify(remote.items); if(remoteJson !== localJson){ state = remote; saveLocal(state); render(); showSync('Updated just now'); } } }
+function startPolling(){ if(!CONFIG.syncEndpoint) return; stopPolling(); pollTimer = setInterval(pollRemote, CONFIG.pollMs); }
+function stopPolling(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopPolling(); else startPolling(); });
+
 async function setup(){
   $items=document.querySelector('#items');
-  $summary=document.querySelector('#summary');
-  $progress=document.querySelector('#progressBar');
-  $totals=document.querySelector('#totals');
   $search=document.querySelector('#search');
   $sort=document.querySelector('#sort');
   $syncStatus=document.querySelector('#syncStatus');
@@ -202,29 +156,15 @@ async function setup(){
   $search.addEventListener('input',render);
   $sort.addEventListener('change',render);
 
-  if(!CONFIG.syncEndpoint || CONFIG.syncEndpoint.includes('YOUR_APPS_SCRIPT_URL_HERE')){
-    showSync('Not synced: changes save only on this device', false);
-    const local=loadLocal();
-    if(local?.items) state=local; // use local if present
-    render();
-    return;
-  }
-
   showSync('Syncing…', true);
   const remote=await loadRemote();
   const local=loadLocal();
-  if(remote?.items?.length){
-    state=remote; showSync('Live sync enabled');
-  }else if(local?.items?.length){
-    // one-time bootstrap to remote
-    state=local; const ok=await saveRemote(state); showSync(ok?'Uploaded your list for everyone':'Sync offline – saved on this device', ok);
-  }else{
-    // start with initial and push up
-    const ok=await saveRemote(state); showSync(ok?'Live sync enabled':'Sync offline – saved on this device', ok);
-  }
+  if(remote?.items?.length){ state=remote; showSync('Live sync enabled'); }
+  else if(local?.items?.length){ state=local; const ok=await saveRemote(state); showSync(ok?'Uploaded your list for everyone':'Sync offline – saved on this device', ok); }
+  else { const ok=await saveRemote(state); showSync(ok?'Live sync enabled':'Sync offline – saved on this device', ok); }
   render();
+  startPolling();
 }
-
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setup); else setup();
 </script>
 </body>

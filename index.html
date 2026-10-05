@@ -115,6 +115,7 @@
       class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     </section>
 
+    <!-- BLACK FOOTER TEXT -->
     <footer class="mt-10 text-xs text-black">
       <p>
         Tip: Tap “Mark purchased” after you buy an item so others don’t
@@ -148,7 +149,16 @@ const CONFIG = {
 
 
 /* =========================================================
-   CURRENT GIFT LIST
+   STARTING GIFT LIST
+
+   IMPORTANT:
+   This is only the starting/fallback list now.
+
+   Once the remote list exists, the remote list becomes
+   the master.
+
+   This means future Console-added items can stay
+   permanently without updating GitHub.
 ========================================================= */
 
 const INITIAL_ITEMS = [
@@ -307,6 +317,34 @@ const INITIAL_ITEMS = [
     linkLabel:
       "Dual Battery Charger + Enduro 2 Battery | GoPro",
     purchased: false
+  },
+
+  /* NEW */
+  {
+    id: "oneal-tx8000-gear-bag",
+    cost: 98.99,
+    name: "O'Neal TX-8000 Gear Bag",
+    size: "",
+    color: "Black",
+    link:
+      "https://www.motosport.com/oneal-tx8000-gear-bag?variant=ONA00HW-X001-Y001",
+    linkLabel:
+      "O'Neal TX-8000 Gear Bag | MotoSport",
+    purchased: false
+  },
+
+  /* NEW */
+  {
+    id: "fxr-2026-knee-brace-socks",
+    cost: 44.99,
+    name: "FXR 2026 Knee Brace Socks",
+    size: "S/M",
+    color: "Razz / Black",
+    link:
+      "https://www.motosport.com/fxr-2026-knee-brace-socks?variant=FFR00UR-X003-Y001",
+    linkLabel:
+      "FXR 2026 Knee Brace Socks | MotoSport",
+    purchased: false
   }
 
 ];
@@ -316,7 +354,7 @@ const INITIAL_ITEMS = [
    LOCAL STORAGE
 ========================================================= */
 
-const KEY = "km-gifts-v3";
+const KEY = "km-gifts-v4";
 
 function loadLocal() {
   try {
@@ -341,49 +379,90 @@ function jsonp(url) {
 
   return new Promise((resolve, reject) => {
 
-    const cb = "kmJSONPcb";
+    const cb =
+      "kmJSONPcb_" +
+      Date.now() +
+      "_" +
+      Math.random().toString(36).slice(2);
 
-    window[cb] = function(data) {
+    let finished = false;
+
+    const cleanup = () => {
       try {
-        resolve(data);
-      } catch (e) {}
+        delete window[cb];
+      } catch {}
+
+      script.remove();
     };
 
-    const s = document.createElement("script");
+    window[cb] = function(data) {
 
-    s.src =
+      if (finished) return;
+
+      finished = true;
+
+      cleanup();
+
+      resolve(data);
+    };
+
+    const script =
+      document.createElement("script");
+
+    script.src =
       url +
       (url.includes("?") ? "&" : "?") +
       "callback=" +
-      cb +
+      encodeURIComponent(cb) +
       "&_t=" +
       Date.now();
 
-    s.onerror = () => {
-      reject(new Error("JSONP error"));
-      s.remove();
+    script.onerror = () => {
+
+      if (finished) return;
+
+      finished = true;
+
+      cleanup();
+
+      reject(
+        new Error("JSONP error")
+      );
     };
 
-    document.head.appendChild(s);
+    document.head.appendChild(script);
 
     setTimeout(() => {
-      reject(new Error("JSONP timeout"));
-      s.remove();
+
+      if (finished) return;
+
+      finished = true;
+
+      cleanup();
+
+      reject(
+        new Error("JSONP timeout")
+      );
+
     }, 12000);
 
   });
-
 }
 
 
 async function loadRemote() {
 
   try {
-    return await jsonp(CONFIG.syncEndpoint);
-  } catch {
-    return null;
-  }
 
+    return await jsonp(
+      CONFIG.syncEndpoint
+    );
+
+  } catch {
+
+    return null;
+
+  }
 }
 
 
@@ -391,26 +470,29 @@ async function saveRemote(data) {
 
   try {
 
-    const r = await fetch(CONFIG.syncEndpoint, {
+    const response =
+      await fetch(
+        CONFIG.syncEndpoint,
+        {
+          method: "POST",
 
-      method: "POST",
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
 
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
+          body:
+            JSON.stringify(data)
+        }
+      );
 
-      body: JSON.stringify(data)
-
-    });
-
-    return r.ok;
+    return response.ok;
 
   } catch {
 
     return false;
 
   }
-
 }
 
 
@@ -419,7 +501,8 @@ async function saveRemote(data) {
 ========================================================= */
 
 let state = {
-  items: structuredClone(INITIAL_ITEMS)
+  items:
+    structuredClone(INITIAL_ITEMS)
 };
 
 let lastPushTs = 0;
@@ -454,7 +537,9 @@ function formatMoney(n) {
 
 function getFilteredSorted(arr) {
 
-  let out = [...arr];
+  let out =
+    [...arr];
+
 
   const q =
     (($search && $search.value) || "")
@@ -464,22 +549,29 @@ function getFilteredSorted(arr) {
 
   if (q) {
 
-    out = out.filter(it =>
+    out =
+      out.filter(it =>
 
-      [it.name, it.size, it.color]
-        .some(s =>
-          String(s)
+        [
+          it.name,
+          it.size,
+          it.color
+        ].some(s =>
+
+          String(s || "")
             .toLowerCase()
             .includes(q)
+
         )
 
-    );
+      );
 
   }
 
 
   const sortVal =
-    (($sort && $sort.value) || "default");
+    (($sort && $sort.value) ||
+      "default");
 
 
   switch (sortVal) {
@@ -488,7 +580,8 @@ function getFilteredSorted(arr) {
 
       out.sort(
         (a,b) =>
-          a.cost - b.cost
+          Number(a.cost || 0) -
+          Number(b.cost || 0)
       );
 
       break;
@@ -498,7 +591,8 @@ function getFilteredSorted(arr) {
 
       out.sort(
         (a,b) =>
-          b.cost - a.cost
+          Number(b.cost || 0) -
+          Number(a.cost || 0)
       );
 
       break;
@@ -508,7 +602,10 @@ function getFilteredSorted(arr) {
 
       out.sort(
         (a,b) =>
-          a.name.localeCompare(b.name)
+          String(a.name)
+            .localeCompare(
+              String(b.name)
+            )
       );
 
       break;
@@ -525,19 +622,17 @@ function getFilteredSorted(arr) {
       break;
 
 
+    /*
+      No sorting is necessary for
+      "Original".
+
+      This is important because
+      Console-added items may not
+      exist in INITIAL_ITEMS.
+    */
+
     default:
-
-      out.sort((a,b) =>
-
-        INITIAL_ITEMS.findIndex(
-          x => x.id === a.id
-        ) -
-
-        INITIAL_ITEMS.findIndex(
-          x => x.id === b.id
-        )
-
-      );
+      break;
 
   }
 
@@ -584,7 +679,12 @@ function cardHTML(it) {
           <span class="text-slate-500">
             Price:
           </span>
-          ${formatMoney(it.cost)}
+
+          ${
+            Number(it.cost) > 0
+              ? formatMoney(it.cost)
+              : "—"
+          }
         </div>
 
 
@@ -592,6 +692,7 @@ function cardHTML(it) {
           <span class="text-slate-500">
             Size:
           </span>
+
           ${it.size || "—"}
         </div>
 
@@ -600,6 +701,7 @@ function cardHTML(it) {
           <span class="text-slate-500">
             Color:
           </span>
+
           ${it.color || "—"}
         </div>
 
@@ -645,7 +747,8 @@ function cardHTML(it) {
 
 
         ${
-          CONFIG.allowUndo && it.purchased
+          CONFIG.allowUndo &&
+          it.purchased
             ? `
               <button
                 id="undo-${it.id}"
@@ -673,7 +776,9 @@ function cardHTML(it) {
 function render() {
 
   const items =
-    getFilteredSorted(state.items);
+    getFilteredSorted(
+      state.items
+    );
 
 
   $items.innerHTML =
@@ -685,26 +790,41 @@ function render() {
   for (const it of items) {
 
     document
-      .querySelector(`#mark-${it.id}`)
+      .querySelector(
+        `#mark-${it.id}`
+      )
       ?.addEventListener(
         "click",
-        () => toggle(it.id, true)
+        () =>
+          toggle(
+            it.id,
+            true
+          )
       );
 
 
     document
-      .querySelector(`#undo-${it.id}`)
+      .querySelector(
+        `#undo-${it.id}`
+      )
       ?.addEventListener(
         "click",
-        () => toggle(it.id, false)
+        () =>
+          toggle(
+            it.id,
+            false
+          )
       );
 
 
     document
-      .querySelector(`#copy-${it.id}`)
+      .querySelector(
+        `#copy-${it.id}`
+      )
       ?.addEventListener(
         "click",
-        () => copy(it.link)
+        () =>
+          copy(it.link)
       );
 
   }
@@ -716,9 +836,13 @@ function render() {
    STATUS
 ========================================================= */
 
-function showSync(text, ok = true) {
+function showSync(
+  text,
+  ok = true
+) {
 
   if (!$syncStatus) return;
+
 
   $syncStatus.textContent =
     text;
@@ -726,8 +850,8 @@ function showSync(text, ok = true) {
 
   $syncStatus.className =
     ok
-      ? "text-[11px] text-emerald-600"
-      : "text-[11px] text-amber-600";
+      ? "mt-2 text-[11px] text-emerald-600"
+      : "mt-2 text-[11px] text-amber-600";
 
 }
 
@@ -736,11 +860,15 @@ function showSync(text, ok = true) {
    PURCHASE STATUS
 ========================================================= */
 
-function toggle(id, purchased) {
+async function toggle(
+  id,
+  purchased
+) {
 
   const idx =
     state.items.findIndex(
-      i => i.id === id
+      item =>
+        item.id === id
     );
 
 
@@ -756,22 +884,30 @@ function toggle(id, purchased) {
   render();
 
 
+  /*
+    Prevent polling from immediately
+    overwriting our own update.
+  */
+
   lastPushTs =
     Date.now();
 
 
-  saveRemote(state)
-    .then(ok => {
+  showSync(
+    "Saving…"
+  );
 
-      if (ok) {
 
-        showSync(
-          "Changes saved for everyone"
-        );
+  const ok =
+    await saveRemote(state);
 
-      }
 
-    });
+  showSync(
+    ok
+      ? "Changes saved for everyone"
+      : "Could not sync – saved on this device",
+    ok
+  );
 
 }
 
@@ -786,6 +922,7 @@ async function copy(text) {
 
     await navigator.clipboard
       .writeText(text);
+
 
     toast(
       "Link copied"
@@ -829,13 +966,26 @@ function toast(msg) {
 
 
 /* =========================================================
-   POLL REMOTE CHANGES
+   REMOTE POLLING
+
+   IMPORTANT:
+   The remote list is now allowed to contain
+   items that are NOT in INITIAL_ITEMS.
+
+   This is what makes Console additions persist.
 ========================================================= */
 
 async function pollRemote() {
 
-  if (document.hidden) return;
+  if (document.hidden) {
+    return;
+  }
 
+
+  /*
+    Don't poll immediately after this
+    browser saved something.
+  */
 
   if (
     Date.now() -
@@ -857,71 +1007,16 @@ async function pollRemote() {
     Array.isArray(remote.items)
   ) {
 
-    /*
-      Only allow items that exist
-      in INITIAL_ITEMS.
-
-      This prevents old deleted gifts
-      from returning.
-    */
-
-    const allowedIds =
-      new Set(
-        INITIAL_ITEMS.map(
-          item => item.id
-        )
-      );
-
-
-    const cleanedItems =
-      remote.items.filter(
-        item =>
-          allowedIds.has(item.id)
-      );
-
-
-    /*
-      If an item is missing remotely,
-      restore it from INITIAL_ITEMS.
-    */
-
-    const remoteById =
-      new Map(
-        cleanedItems.map(
-          item => [item.id, item]
-        )
-      );
-
-
-    const finalItems =
-      INITIAL_ITEMS.map(item => {
-
-        const remoteItem =
-          remoteById.get(item.id);
-
-
-        if (remoteItem) {
-
-          return {
-            ...structuredClone(item),
-            purchased:
-              Boolean(remoteItem.purchased)
-          };
-
-        }
-
-
-        return structuredClone(item);
-
-      });
-
-
     const localJson =
-      JSON.stringify(state.items);
+      JSON.stringify(
+        state.items
+      );
 
 
     const remoteJson =
-      JSON.stringify(finalItems);
+      JSON.stringify(
+        remote.items
+      );
 
 
     if (
@@ -929,8 +1024,14 @@ async function pollRemote() {
       localJson
     ) {
 
+      /*
+        Remote list is the master.
+        Do NOT filter against INITIAL_ITEMS.
+      */
+
       state = {
-        items: finalItems
+        items:
+          remote.items
       };
 
 
@@ -997,6 +1098,13 @@ document.addEventListener(
 
     } else {
 
+      /*
+        Check remote immediately when
+        someone comes back to the tab.
+      */
+
+      pollRemote();
+
       startPolling();
 
     }
@@ -1007,6 +1115,20 @@ document.addEventListener(
 
 /* =========================================================
    INITIAL SETUP
+
+   NEW BEHAVIOR:
+
+   1. If remote data exists:
+      use remote data.
+
+   2. If there is no remote data:
+      use local data.
+
+   3. If neither exists:
+      use INITIAL_ITEMS.
+
+   This allows Console-added gifts
+   to remain in the remote database.
 ========================================================= */
 
 async function setup() {
@@ -1048,98 +1170,332 @@ async function setup() {
 
 
   showSync(
-    "Syncing…",
-    true
+    "Syncing…"
   );
 
-
-  /*
-    Read the old remote list ONLY
-    to preserve purchased statuses
-    for gifts that still exist.
-  */
 
   const remote =
     await loadRemote();
 
 
-  const purchasedById =
-    new Map();
-
+  /*
+    REMOTE EXISTS:
+    Use it exactly as stored.
+  */
 
   if (
-    remote &&
-    Array.isArray(remote.items)
+    remote?.items &&
+    Array.isArray(remote.items) &&
+    remote.items.length > 0
   ) {
 
-    for (
-      const item of
-      remote.items
+    state = {
+      items:
+        remote.items
+    };
+
+
+    saveLocal(state);
+
+
+    showSync(
+      "Live sync enabled"
+    );
+
+  } else {
+
+    /*
+      No usable remote list.
+
+      Try this browser's local copy.
+    */
+
+    const local =
+      loadLocal();
+
+
+    if (
+      local?.items &&
+      Array.isArray(local.items) &&
+      local.items.length > 0
     ) {
 
-      purchasedById.set(
-        item.id,
-        Boolean(item.purchased)
-      );
+      state = {
+        items:
+          local.items
+      };
+
+    } else {
+
+      /*
+        Brand-new setup:
+        use the list embedded in GitHub.
+      */
+
+      state = {
+        items:
+          structuredClone(
+            INITIAL_ITEMS
+          )
+      };
 
     }
+
+
+    saveLocal(state);
+
+
+    /*
+      Create/restore the remote list.
+    */
+
+    lastPushTs =
+      Date.now();
+
+
+    const ok =
+      await saveRemote(state);
+
+
+    showSync(
+      ok
+        ? "Live sync enabled"
+        : "Sync offline – saved on this device",
+      ok
+    );
 
   }
 
 
-  /*
-    INITIAL_ITEMS is the master list.
+  render();
 
-    Anything that existed remotely
-    but is NOT in INITIAL_ITEMS
-    is removed.
-  */
+  startPolling();
 
-  state = {
+}
 
-    items:
-      INITIAL_ITEMS.map(
-        item => ({
 
-          ...structuredClone(item),
+/* =========================================================
+   OPTIONAL CONSOLE HELPER
 
-          purchased:
-            purchasedById.has(item.id)
-              ? purchasedById.get(item.id)
-              : false
+   After this version is live, I can give you
+   a simple command like:
 
-        })
+   addGift({...})
+
+   instead of the long code block each time.
+========================================================= */
+
+async function addGift(newItem) {
+
+  if (
+    !newItem ||
+    !newItem.id ||
+    !newItem.name
+  ) {
+
+    console.error(
+      "Gift needs at least an id and name."
+    );
+
+    return false;
+
+  }
+
+
+  const existingIndex =
+    state.items.findIndex(
+      item =>
+        item.id === newItem.id
+    );
+
+
+  const normalizedItem = {
+
+    id:
+      newItem.id,
+
+    cost:
+      Number(
+        newItem.cost || 0
+      ),
+
+    name:
+      newItem.name,
+
+    size:
+      newItem.size || "",
+
+    color:
+      newItem.color || "",
+
+    link:
+      newItem.link || "",
+
+    linkLabel:
+      newItem.linkLabel ||
+      newItem.name,
+
+    purchased:
+      Boolean(
+        newItem.purchased
       )
 
   };
 
 
+  /*
+    If the ID already exists,
+    update that gift instead of
+    creating a duplicate.
+  */
+
+  if (
+    existingIndex >= 0
+  ) {
+
+    /*
+      Preserve purchased status unless
+      explicitly supplied.
+    */
+
+    if (
+      typeof newItem.purchased !==
+      "boolean"
+    ) {
+
+      normalizedItem.purchased =
+        Boolean(
+          state.items[
+            existingIndex
+          ].purchased
+        );
+
+    }
+
+
+    state.items[
+      existingIndex
+    ] =
+      normalizedItem;
+
+  } else {
+
+    state.items.push(
+      normalizedItem
+    );
+
+  }
+
+
   saveLocal(state);
 
+  render();
 
-  /*
-    Replace the remote list with
-    the current clean list.
-  */
+
+  lastPushTs =
+    Date.now();
+
+
+  showSync(
+    "Saving…"
+  );
+
 
   const ok =
     await saveRemote(state);
 
 
   showSync(
-
     ok
-      ? "Live sync enabled"
-      : "Sync offline – saved on this device",
-
+      ? "Changes saved for everyone"
+      : "Could not sync – saved on this device",
     ok
-
   );
 
 
+  if (ok) {
+
+    console.log(
+      "Gift saved:",
+      normalizedItem
+    );
+
+  } else {
+
+    console.error(
+      "Gift saved locally but remote sync failed."
+    );
+
+  }
+
+
+  return ok;
+
+}
+
+
+/* =========================================================
+   OPTIONAL CONSOLE DELETE HELPER
+
+   Example:
+   removeGift("gift-id")
+========================================================= */
+
+async function removeGift(id) {
+
+  const exists =
+    state.items.some(
+      item =>
+        item.id === id
+    );
+
+
+  if (!exists) {
+
+    console.warn(
+      "Gift not found:",
+      id
+    );
+
+    return false;
+
+  }
+
+
+  state.items =
+    state.items.filter(
+      item =>
+        item.id !== id
+    );
+
+
+  saveLocal(state);
+
   render();
 
-  startPolling();
+
+  lastPushTs =
+    Date.now();
+
+
+  showSync(
+    "Saving…"
+  );
+
+
+  const ok =
+    await saveRemote(state);
+
+
+  showSync(
+    ok
+      ? "Gift removed for everyone"
+      : "Could not sync deletion",
+    ok
+  );
+
+
+  return ok;
 
 }
 
